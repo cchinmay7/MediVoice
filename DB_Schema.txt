@@ -1,0 +1,274 @@
+================================================================================
+                          DATABASE SCHEMA
+          Medication Tracking and Patient Intervention System
+================================================================================
+
+TABLE 0: patient_table
+================================================================================
+Purpose: Stores patient information and voice identification code for Alexa
+
+Fields:
+--------
+1. patient_id (PRIMARY KEY)
+   - Type: VARCHAR(50)
+   - Purpose: Unique identifier for each patient (e.g., "P001")
+   - Constraint: NOT NULL
+
+2. first_name (VARCHAR(100))
+   - Type: VARCHAR(100)
+   - Purpose: Patient's first name
+   - Constraint: NOT NULL
+
+3. last_name (VARCHAR(100))
+   - Type: VARCHAR(100)
+   - Purpose: Patient's last name
+   - Constraint: NOT NULL
+
+4. pairing_code (VARCHAR(10)) - UNIQUE
+   - Type: VARCHAR(10)
+   - Purpose: Unique numeric or alphanumeric code spoken by patient
+   - Example: "1234", "ABC123"
+   - Usage: Alexa identifies patient by this spoken code (no account linking required)
+   - Constraint: UNIQUE, NOT NULL
+   - CRITICAL: This is how the Alexa skill knows which patient is speaking
+
+5. is_active (BOOLEAN)
+   - Type: BOOLEAN
+   - Default: TRUE
+   - Purpose: Flag to indicate if patient is currently active in the system
+   - Constraint: NOT NULL
+
+6. created_at (TIMESTAMP)
+    - Type: TIMESTAMP
+    - Default: CURRENT_TIMESTAMP
+    - Purpose: When the patient record was created
+
+7. updated_at (TIMESTAMP)
+    - Type: TIMESTAMP
+    - Default: CURRENT_TIMESTAMP
+    - Purpose: When the patient record was last updated
+
+EXAMPLE DATA:
+═════════════
+patient_id │ first_name │ last_name │ pairing_code │ is_active
+──────────────────────────────────────────────────
+P001       │ John       │ Doe       │ 1234         │ TRUE
+P002       │ Jane       │ Smith     │ 5678         │ TRUE
+P003       │ Mike       │ Johnson   │ ABC123       │ TRUE
+
+================================================================================
+
+TABLE 1: medication_table
+================================================================================
+Purpose: Stores patient medication information and schedules
+
+Fields:
+--------
+1. medication_id (PRIMARY KEY) => ID is unique for each patient even if the medication is same (one to one relationship)
+   - Type: INT AUTO_INCREMENT
+   - Purpose: Unique identifier for each medication record
+
+2. patient_id (FOREIGN KEY)
+   - Type: VARCHAR(50)
+   - Purpose: Links to patient records
+   - Constraint: NOT NULL
+
+3. medication_name (VARCHAR(100))
+   - Type: VARCHAR(100)
+   - Purpose: Name of the medication (e.g., "Lisinopril")
+   - Constraint: NOT NULL
+
+4. dose (VARCHAR(50))
+   - Type: VARCHAR(50)
+   - Purpose: Dosage amount and unit (e.g., "20 mg", "500 mcg")
+   - Constraint: NOT NULL
+   - Note: Indication (blood pressure) and timing (by mouth) are implicit/general for all meds
+
+6. is_active (BOOLEAN)
+    - Type: BOOLEAN
+    - Default: TRUE
+    - Purpose: Flag to indicate if medication is currently prescribed
+    - Constraint: NOT NULL
+
+7. created_at (TIMESTAMP)
+    - Type: TIMESTAMP
+    - Default: CURRENT_TIMESTAMP
+    - Purpose: When the medication record was created
+
+TABLE 2: medication_administration
+================================================================================
+Purpose: Tracks each instance of medication administration and related events
+
+Cardinality:
+------------
+- One patient can have many medication_administration records.
+- One medication can have many medication_administration records over time.
+- For a single intervention session, create one medication_administration record per medication asked.
+- Example: If 2 medications are prompted in the same session, medication_administration must contain 2 entries.
+
+Fields:
+--------
+1. administration_id (PRIMARY KEY)
+   - Type: INT AUTO_INCREMENT
+   - Purpose: Unique identifier for each administration event
+
+2. patient_id (FOREIGN KEY)
+   - Type: VARCHAR(50)
+   - Purpose: Links to patient records
+   - Constraint: NOT NULL
+
+3. medication_id (FOREIGN KEY)
+   - Type: INT
+   - Purpose: Links to medication_table
+   - Constraint: NOT NULL
+
+4. medication_name (VARCHAR(100))
+   - Type: VARCHAR(100)
+   - Purpose: Name of the medication administered
+   - Constraint: NOT NULL
+
+7. patient_confirmed (BOOLEAN)
+   - Type: BOOLEAN
+   - Default: FALSE
+   - Purpose: Whether patient confirmed taking the medication
+   - Constraint: NOT NULL
+
+8. interaction_flag (BOOLEAN)
+   - Type: BOOLEAN
+   - Default: FALSE
+   - Purpose: Flag indicating if they interacted with the device
+   - Constraint: NOT NULL
+
+9. interaction_completion_flag (BOOLEAN)
+   - Type: BOOLEAN
+   - Default: FALSE
+   - Purpose: Flag indicating interaction resolution status
+   - Constraint: NOT NULL
+
+10. nurse_contact_required (BOOLEAN) => When is this marked? When there is a change in medication or if the input is not registered.
+   - Type: BOOLEAN
+   - Default: FALSE
+   - Purpose: Flag indicating nurse follow-up is needed
+   - Constraint: NOT NULL
+
+11. educational_prompt_delivered (BOOLEAN) => Not synonymous with 9 as the user can avoid educational prompt
+   - Type: BOOLEAN
+   - Default: FALSE
+   - Purpose: Whether educational content was delivered
+   - Constraint: NOT NULL
+
+12. created_at (TIMESTAMP)
+   - Type: TIMESTAMP
+   - Default: CURRENT_TIMESTAMP
+   - Purpose: When the administration record was created
+   
+13. ended_at (TIMESTAMP)
+   - Type: TIMESTAMP
+   - Default: CURRENT_TIMESTAMP
+   - Purpose: When the interact ended
+
+JSON SESSION STORAGE MAPPING (sessions.json):
+═════════════════════════════════════════════
+- A session object stores session-level metadata (`session_id`, `patient_id`, `created_at`, `updated_at`, `ended_at`).
+- `medication_administration` is an ARRAY of objects.
+- Each object in `medication_administration` maps to one row of TABLE 2.
+- Therefore, the array length should equal the number of medication prompts completed in that session.
+
+================================================================================
+KEY RELATIONSHIPS
+================================================================================
+
+Foreign Keys:
+- medication_table.patient_id -> patient_table.patient_id
+- medication_administration.patient_id -> patient_table.patient_id
+- medication_administration.medication_id -> medication_table.medication_id
+
+Indexes (Recommended):
+- patient_table: UNIQUE INDEX on pairing_code (for voice pairing code lookup)
+- medication_table: INDEX on patient_id, is_active
+- medication_administration: INDEX on patient_id, scheduled_time, error_flag
+- medication_administration: INDEX on medication_id, patient_confirmed
+
+AUTHENTICATION FLOW (Pairing Code Only):
+═════════════════════════════════════════
+
+1. Alexa asks patient to say their unique code.
+2. Lambda extracts code from intent slot.
+3. Lambda query: SELECT patient_id FROM patient_table WHERE pairing_code = ? AND is_active = TRUE.
+4. If patient found, continue medication intervention for that patient.
+5. If no match, Alexa asks patient to repeat the code or contact nurse/admin.
+
+1. Time Validation:
+   - scheduled_time cannot be in the past
+   - actual_administration_time should not exceed 12 hours from scheduled_time
+
+2. Flag Logic:
+   - If error_flag = TRUE, then error_description must be populated
+   - If interaction_flag = TRUE, then interaction_details must be populated
+   - If medication_change_reported = TRUE, then medication_change_details should be populated
+
+3. Audit Trail:
+   - updated_at should be automatically set to current timestamp on any update
+   - created_at should never be modified after initial record creation
+
+
+================================================================================
+SAMPLE QUERIES
+================================================================================
+
+PATIENT IDENTIFICATION QUERIES (Pairing Code):
+══════════════════════════════════════════════
+
+1. Identify patient by spoken code:
+   SELECT patient_id, first_name, last_name
+   FROM patient_table
+   WHERE pairing_code = '1234' AND is_active = TRUE;
+
+2. Set or reset pairing code for patient:
+   UPDATE patient_table 
+   SET pairing_code = '1234' 
+   WHERE patient_id = 'P001';
+
+3. Get all active patients (for admin dashboard):
+   SELECT patient_id, first_name, last_name, pairing_code
+   FROM patient_table 
+   WHERE is_active = TRUE;
+
+───────────────────────────────────────────────────────────────────────────
+
+MEDICATION QUERIES:
+
+5. Find all medications for a patient:
+   SELECT * FROM medication_table WHERE patient_id = 'P001' AND is_active = TRUE;
+
+6. Get today's medication administration status:
+   SELECT m.medication_name, ma.scheduled_time, ma.patient_confirmed
+   FROM medication_administration ma
+   JOIN medication_table m ON ma.medication_id = m.medication_id
+   WHERE ma.patient_id = 'P001' AND DATE(ma.scheduled_time) = CURDATE();
+
+7. Identify missed medications:
+   SELECT * FROM medication_administration 
+   WHERE patient_id = 'P001' AND patient_confirmed = FALSE 
+   AND scheduled_time < NOW();
+
+8. Find patients with flagged issues:
+   SELECT DISTINCT patient_id FROM medication_administration
+   WHERE error_flag = TRUE OR interaction_flag = TRUE OR medication_flag = TRUE
+   AND updated_at > DATE_SUB(NOW(), INTERVAL 7 DAY);
+
+9. Get blood pressure trends:
+   SELECT scheduled_time, bp_systolic, bp_diastolic, medication_name
+   FROM medication_administration
+   WHERE patient_id = 'P001' AND bp_systolic IS NOT NULL
+   ORDER BY scheduled_time DESC LIMIT 30;
+
+10. Identify patients requiring nurse contact:
+    SELECT DISTINCT patient_id, medication_change_reported, nurse_contact_required
+    FROM medication_administration
+    WHERE nurse_contact_required = TRUE AND updated_at > DATE_SUB(NOW(), INTERVAL 24 HOUR);
+
+
+================================================================================
+END OF SCHEMA DOCUMENTATION
+================================================================================

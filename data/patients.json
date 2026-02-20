@@ -1,0 +1,38 @@
+{
+  "P001": {
+    "patient_id": "P001",
+    "first_name": "John",
+    "last_name": "Doe",
+    "pairing_code": "1234",
+    "is_active": true,
+    "created_at": "2026-01-30T09:00:00",
+    "updated_at": "2026-01-30T09:00:00"
+  },
+  "P002": {
+    "patient_id": "P002",
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "pairing_code": "5678",
+    "is_active": true,
+    "created_at": "2026-01-30T09:05:00",
+    "updated_at": "2026-01-30T09:05:00"
+  },
+  "P003": {
+    "patient_id": "P003",
+    "first_name": "Mike",
+    "last_name": "Johnson",
+    "pairing_code": "ABC123",
+    "is_active": true,
+    "created_at": "2026-01-30T09:10:00",
+    "updated_at": "2026-01-30T09:10:00"
+  },
+  "P034": {
+    "patient_id": "P034",
+    "first_name": "Check",
+    "last_name": "123",
+    "pairing_code": "0000",
+    "is_active": true,
+    "created_at": "2026-02-17T21:38:00.019402",
+    "updated_at": "2026-02-17T21:38:00.019402"
+  }
+}

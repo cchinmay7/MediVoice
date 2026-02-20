@@ -1,0 +1,1 @@
+{"version":"2.0","routeKey":"GET /patients","rawPath":"/patients","rawQueryString":"","headers":{"host":"example.com"},"requestContext":{"http":{"method":"GET","path":"/patients","sourceIp":"1.1.1.1","userAgent":"test"}},"isBase64Encoded":false}

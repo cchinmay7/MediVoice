@@ -1,0 +1,47 @@
+Intervention Script
+Participant: “Alexa” 
+Smart speaker (SS): “Hello, what is your identifier?”
+Participant: “XYZ”
+Smart speaker (SS): “Hello, how can I help you?”
+Participant: “I took my medicine,” or “I took my pills.”
+SS: “Great, let’s begin. Before we continue, have any changes been made to your blood pressure medications?”
+Participant: 
+1.	“Yes”. 
+a.	SS: “Your nurse will contact you to discuss the changes. If you have questions, you can call the nurse.” Then, the smart speaker skips over to the educational prompts. 
+2.	“No.”
+a.	Proceed below.
+SS: “Okay,” then responds with the scheduled medication name, dose, strength, and indication. For example, “Okay, did you take your lisinopril 20 mg by mouth today? It is for your blood pressure.”
+Participant: 
+1.	“Yes”
+2.	“No”
+SS: Regardless of whether the participant answers yes or no, the smart speaker will confirm the registered response. “You told me that you took your (name of medicine), or you told me that you have not taken your (name of medicine). Is this correct?”
+Participant: 
+1.	“Yes”
+2.	“No” 
+SS: 
+1.  If yes answers the last prompt, the reply is “Thank you.” Then, the smart speaker will inquire about the next medication on file if another one is scheduled at the same time. 
+2.	If no is the answer to the last prompt, then the scheduled medication name, dose, and strength will be repeated, closing with “Have you taken this pill today?” 
+a.	If the input cannot be registered, the device will reply, “I am having trouble understanding you. I am going to let the nurse know.” The PI will be alerted that there has been an error, and the PI will call the participant to troubleshoot. Then, the smart speaker will conclude with educational prompts. 
+SS: “Would you like more information about taking care of your high blood pressure?”
+Participant: 
+1.	“Yes.” Proceed to the educational prompt about high blood pressure.
+2.	“No.” 
+a.	SS: “Goodbye.”
+SS: “You want to hear more about how to take care of high blood pressure. Correct?”
+Participant:
+1.	“Yes.” Proceed to the educational prompt.
+2.	No
+a.	SS: “Goodbye.”
+SS: “If you would like to hear more information about eating right, say one; if you would like to hear about exercise, say two; if you would like to hear more tips about how to take care of high blood pressure, say three, if you are finished, say leave now.”
+Participant: Answers:
+1.	“One.” Proceed to the first educational prompt. 
+2.	“Two.” Proceed to the second educational prompt.
+3.	“Three.” Proceed to the third educational prompt.
+4.	“Leave now.” Proceed to SS’s final response for this session. 
+5.	If the participant does not answer, then similarly to #4, the SS will proceed to the final response for this session.
+Educational Prompts from the National Institute on Aging 
+1.	High blood pressure and diet— “A balanced diet includes vegetables, proteins, whole grains, and healthy oils which help to control high blood pressure. Also, cutting back the salt can decrease the blood pressure” (National Institutes of Aging, 2022).
+2.	High blood pressure and exercise – “Including regular exercise can help control high blood pressure. Walking is a low-impact exercise, but contact your doctor before starting a new workout plan” (National Institutes of Aging, 2022). 
+3.	Other tips to help reduce high blood pressure – “Drinking alcohol and smoking cigarettes both increase your risk of high blood pressure. If you drink alcohol, limit the amount you drink to one serving size per day for women and two servings per day for men. For strategies to help you quit smoking, please get in touch with your doctor or nurse” (National Institutes of Aging, 2022).  
+SS: “Goodbye.”
+

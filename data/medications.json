@@ -1,0 +1,44 @@
+{
+  "MED002": {
+    "medication_id": "MED002",
+    "patient_id": "P001",
+    "name": "Metoprolol",
+    "dose": "50 mg"
+  },
+  "MED003": {
+    "medication_id": "MED003",
+    "patient_id": "P002",
+    "name": "Amlodipine",
+    "dose": "10 mg"
+  },
+  "MED004": {
+    "medication_id": "MED004",
+    "patient_id": "P003",
+    "name": "Hydrochlorothiazide",
+    "dose": "25 mg"
+  },
+  "MED005": {
+    "medication_id": "MED005",
+    "patient_id": "P003",
+    "name": "Atorvastatin",
+    "dose": "40 mg"
+  },
+  "MED006": {
+    "medication_id": "MED006",
+    "patient_id": "P003",
+    "name": "Aspirin",
+    "dose": "81 mg"
+  },
+  "MED007": {
+    "medication_id": "MED007",
+    "patient_id": "P034",
+    "name": "Aspirin",
+    "dose": "81 mg"
+  },
+  "MED008": {
+    "medication_id": "MED008",
+    "patient_id": "P034",
+    "name": "Check",
+    "dose": "10 mg"
+  }
+}
