@@ -194,6 +194,7 @@ def delete_patient(patient_id: str) -> bool:
 
     patients_table.delete_item(Key={"patient_id": patient_id})
     delete_all_medications_for_patient(patient_id)
+    delete_sessions_for_patient(patient_id)
     return True
 
 
@@ -350,3 +351,27 @@ def load_sessions_for_patient(patient_id: str) -> Dict[str, dict]:
         payload = item.get("session_data") if isinstance(item.get("session_data"), dict) else item
         sessions[session_id] = payload
     return sessions
+
+
+def delete_sessions_for_patient(patient_id: str) -> int:
+    try:
+        response = sessions_table.query(KeyConditionExpression=Key("patient_id").eq(patient_id))
+        items = response.get("Items", [])
+        while "LastEvaluatedKey" in response:
+            response = sessions_table.query(
+                KeyConditionExpression=Key("patient_id").eq(patient_id),
+                ExclusiveStartKey=response["LastEvaluatedKey"],
+            )
+            items.extend(response.get("Items", []))
+    except ClientError:
+        items = _scan_filter(sessions_table, Attr("patient_id").eq(patient_id))
+
+    deleted_count = 0
+    with sessions_table.batch_writer() as batch:
+        for item in items:
+            session_id = item.get("session_id")
+            if session_id:
+                batch.delete_item(Key={"patient_id": patient_id, "session_id": session_id})
+                deleted_count += 1
+
+    return deleted_count

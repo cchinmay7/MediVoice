@@ -134,6 +134,7 @@ def delete_patient(patient_id: str) -> bool:
     save_patients(patients)
     # Also delete all medications for this patient
     delete_all_medications_for_patient(patient_id)
+    delete_sessions_for_patient(patient_id)
     return True
 
 def get_all_patients() -> List[Patient]:
@@ -262,6 +263,28 @@ def load_sessions_for_patient(patient_id: str) -> Dict[str, dict]:
         sid: sdata for sid, sdata in sessions.items()
         if isinstance(sdata, dict) and sdata.get("patient_id") == patient_id
     }
+
+
+def delete_sessions_for_patient(patient_id: str) -> int:
+    """Delete all sessions for a specific patient and return deleted count."""
+    try:
+        sessions = load_all_sessions()
+        filtered_sessions = {
+            sid: sdata
+            for sid, sdata in sessions.items()
+            if not (isinstance(sdata, dict) and sdata.get("patient_id") == patient_id)
+        }
+        deleted_count = len(sessions) - len(filtered_sessions)
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', dir=DATA_DIR, delete=False) as tmp:
+            json.dump(filtered_sessions, tmp, indent=2)
+            tmp_path = tmp.name
+
+        shutil.move(tmp_path, SESSIONS_FILE)
+        return deleted_count
+    except Exception as e:
+        print(f"Error deleting sessions for patient {patient_id}: {e}")
+        raise
 
 
 

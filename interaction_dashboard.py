@@ -166,6 +166,7 @@ def build_administration_record(
     medication: Dict,
     final_taken: Optional[bool],
     unresolved_input: bool,
+    force_nurse_contact: bool = False,
 ) -> Dict:
     timestamp = now_iso()
     return {
@@ -176,7 +177,7 @@ def build_administration_record(
         "patient_confirmed": bool(final_taken),
         "interaction_flag": True,
         "interaction_completion_flag": not unresolved_input,
-        "nurse_contact_required": unresolved_input,
+        "nurse_contact_required": unresolved_input or force_nurse_contact,
         "educational_prompt_delivered": False,
         "medication_change_reported": payload.get("medication_change_reported", False),
         "medication_change_details": payload.get("medication_change_details", ""),
@@ -320,6 +321,21 @@ else:
 
             if change_answer:
                 payload["nurse_contact_required"] = True
+                if medications:
+                    change_records = []
+                    for index, medication in enumerate(medications, start=1):
+                        change_records.append(
+                            build_administration_record(
+                                administration_index=index,
+                                payload=payload,
+                                medication=medication,
+                                final_taken=False,
+                                unresolved_input=False,
+                                force_nurse_contact=True,
+                            )
+                        )
+                    st.session_state.medication_records = change_records
+                    payload["medication_administration"] = change_records
                 st.session_state.flow_step = "education_interest"
             else:
                 if medications:

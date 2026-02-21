@@ -13,14 +13,14 @@ if STORAGE_BACKEND == "dynamodb":
         get_patient, get_all_patients, create_patient, update_patient,
         delete_patient, add_medication_to_patient, remove_medication_from_patient,
         update_medication, get_medications_for_patient, load_medications, save_session,
-        load_session, load_sessions_for_patient
+        load_session, load_sessions_for_patient, delete_sessions_for_patient
     )
 else:
     from data_storage import (
         get_patient, get_all_patients, create_patient, update_patient,
         delete_patient, add_medication_to_patient, remove_medication_from_patient,
         update_medication, get_medications_for_patient, load_medications, save_session,
-        load_session, load_sessions_for_patient
+        load_session, load_sessions_for_patient, delete_sessions_for_patient
     )
 
 app = FastAPI(title="Alexa Skill API", version="1.0.0")
@@ -184,6 +184,17 @@ def get_patient_sessions(patient_id: str):
 
     session_list.sort(key=lambda item: item.get("created_at", ""), reverse=True)
     return {"patient_id": patient_id, "sessions": session_list}
+
+
+@app.delete("/patients/{patient_id}/sessions")
+def delete_patient_sessions(patient_id: str):
+    """Delete all saved sessions for a patient"""
+    deleted_count = delete_sessions_for_patient(patient_id)
+    return {
+        "patient_id": patient_id,
+        "deleted_sessions": deleted_count,
+        "message": f"Deleted {deleted_count} session(s)"
+    }
 
 
 if __name__ == "__main__":
