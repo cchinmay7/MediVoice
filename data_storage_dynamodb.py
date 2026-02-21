@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from typing import Dict, List, Optional
+from zoneinfo import ZoneInfo
 
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
@@ -13,6 +14,7 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 PATIENTS_TABLE_NAME = os.getenv("PATIENTS_TABLE", "patients")
 MEDICATIONS_TABLE_NAME = os.getenv("MEDICATIONS_TABLE", "medications")
 SESSIONS_TABLE_NAME = os.getenv("SESSIONS_TABLE", "sessions")
+EST_TIMEZONE = ZoneInfo("America/New_York")
 
 
 dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
@@ -164,7 +166,7 @@ def get_patient(patient_id: str) -> Optional[Patient]:
 def create_patient(patient: Patient) -> Patient:
     if not patient.patient_id:
         patient.patient_id = _get_next_patient_id()
-    now = datetime.now().isoformat()
+    now = datetime.now(EST_TIMEZONE).isoformat()
     patient.created_at = now
     patient.updated_at = now
 
@@ -180,7 +182,7 @@ def update_patient(patient_id: str, updated_patient: Patient) -> Optional[Patien
 
     updated_patient.patient_id = patient_id
     updated_patient.created_at = existing.created_at
-    updated_patient.updated_at = datetime.now().isoformat()
+    updated_patient.updated_at = datetime.now(EST_TIMEZONE).isoformat()
 
     payload = _model_dump(updated_patient)
     patients_table.put_item(Item=payload)
@@ -278,6 +280,7 @@ def update_medication(medication_id: str, updated_medication: Medication) -> Opt
         "medication_id": medication_id,
         "name": updated_medication.name,
         "dose": updated_medication.dose,
+        "frequency": updated_medication.frequency,
     }
     medications_table.put_item(Item=payload)
     return _build_medication(payload)

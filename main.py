@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 import os
+from zoneinfo import ZoneInfo
 from data_models import (
     Patient, Medication, PatientCreate, MedicationCreate, PatientResponse, InteractionRequest, SessionResponse
 )
@@ -24,6 +25,7 @@ else:
     )
 
 app = FastAPI(title="Alexa Skill API", version="1.0.0")
+EST_TIMEZONE = ZoneInfo("America/New_York")
 
 # Add CORS middleware
 app.add_middleware(
@@ -153,7 +155,7 @@ def save_session_data(session_data: dict):
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     
-    session_id = session_data.get("session_id", f"{session_data.get('patient_id')}_{datetime.now().isoformat()}")
+    session_id = session_data.get("session_id", f"{session_data.get('patient_id')}_{datetime.now(EST_TIMEZONE).isoformat()}")
     save_session(session_id, session_data)
     return {"message": "Session saved successfully", "session_id": session_id}
 

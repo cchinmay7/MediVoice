@@ -11,6 +11,7 @@ node_modules/
 # Build/package artifacts
 lambda_backend_package/
 *.zip
+.deploy_tmp/
 
 # OS/editor
 .DS_Store
@@ -24,3 +25,6 @@ data/sessions.json
 
 # Streamlit local secrets
 .streamlit/secrets.toml
+
+# Local deploy helpers
+deploy_both_skills.ps1

@@ -232,19 +232,24 @@ elif page == "Medications":
                                 if response.status_code == 200:
                                     all_meds = response.json().get("medications", [])
                                     if all_meds:
-                                        med_options = {f"{m['name']} ({m['dose']})": m['medication_id'] for m in all_meds}
+                                        med_options = {
+                                            f"{m['name']} ({m['dose']}, {m.get('frequency', 'once')} daily)": m
+                                            for m in all_meds
+                                        }
                                         selected_med = st.selectbox("Choose medication:", list(med_options.keys()), key="select_existing_med")
                                         
                                         if st.button("Confirm & Add", key="confirm_existing_med"):
-                                            selected_med_id = med_options[selected_med]
+                                            selected_med_obj = med_options[selected_med]
+                                            selected_med_id = selected_med_obj['medication_id']
                                             try:
                                                 # Link existing medication to patient
                                                 response = requests.post(
                                                     f"{API_URL}/patients/{patient_id}/medications",
                                                     json={
                                                         "medication_id": selected_med_id,
-                                                        "name": selected_med.split(' (')[0],
-                                                        "dose": selected_med.split('(')[1].rstrip(')')
+                                                        "name": selected_med_obj['name'],
+                                                        "dose": selected_med_obj['dose'],
+                                                        "frequency": selected_med_obj.get('frequency', 'once')
                                                     }
                                                 )
                                                 
@@ -266,11 +271,12 @@ elif page == "Medications":
                             with st.form("add_new_medication_form"):
                                 name = st.text_input("Medication Name (e.g., Lisinopril)", key="new_med_name")
                                 dose = st.text_input("Dose (e.g., 20 mg)", key="new_med_dose")
+                                frequency = st.text_input("Frequency (e.g., once, twice, thrice)", value="once", key="new_med_frequency")
                                 
                                 submitted = st.form_submit_button("Create & Add Medication")
                                 
                                 if submitted:
-                                    if not all([name, dose]):
+                                    if not all([name, dose, frequency]):
                                         st.error("Please fill in all fields")
                                     else:
                                         try:
@@ -278,7 +284,8 @@ elif page == "Medications":
                                                 f"{API_URL}/patients/{patient_id}/medications",
                                                 json={
                                                     "name": name,
-                                                    "dose": dose
+                                                    "dose": dose,
+                                                    "frequency": frequency
                                                 }
                                             )
                                             
@@ -317,16 +324,18 @@ elif page == "Medications":
                         
                         # Display each medication with associated patient
                         for med in all_meds:
-                            col1, col2, col3, col4 = st.columns([2, 1, 2, 1])
+                            col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 2, 1])
                             
                             with col1:
                                 st.write(f"**{med['name']}**")
                             with col2:
                                 st.caption(f"{med['dose']}")
                             with col3:
+                                st.caption(f"{med.get('frequency', 'once')} daily")
+                            with col4:
                                 patient_name = patient_map.get(med['patient_id'], "Unassigned")
                                 st.write(patient_name)
-                            with col4:
+                            with col5:
                                 if st.button("Remove", key=f"remove_med_{med['medication_id']}", type="secondary"):
                                     try:
                                         response = requests.delete(
@@ -360,7 +369,10 @@ elif page == "Medications":
                 
                 if all_meds:
                     # Create dropdown of all medications
-                    med_options = {f"{m['name']} ({m['dose']}) - ID: {m['medication_id']}": m['medication_id'] for m in all_meds}
+                    med_options = {
+                        f"{m['name']} ({m['dose']}, {m.get('frequency', 'once')} daily) - ID: {m['medication_id']}": m['medication_id']
+                        for m in all_meds
+                    }
                     
                     selected_med_display = st.selectbox(
                         "Select medication to edit:",
@@ -389,6 +401,7 @@ elif page == "Medications":
                             st.write(f"**Patient:** {patient_name}")
                             st.write(f"**Current Name:** {selected_med['name']}")
                             st.write(f"**Current Dose:** {selected_med['dose']}")
+                            st.write(f"**Current Frequency:** {selected_med.get('frequency', 'once')}")
                         
                         with col2:
                             st.subheader("Update Information")
@@ -396,6 +409,7 @@ elif page == "Medications":
                             with st.form("edit_medication_form"):
                                 new_name = st.text_input("Medication Name", value=selected_med['name'], key="edit_med_name")
                                 new_dose = st.text_input("Dose", value=selected_med['dose'], key="edit_med_dose")
+                                new_frequency = st.text_input("Frequency", value=selected_med.get('frequency', 'once'), key="edit_med_frequency")
                                 
                                 col_update, col_delete = st.columns(2)
                                 
@@ -406,7 +420,7 @@ elif page == "Medications":
                                     delete_submitted = st.form_submit_button("Delete Medication", type="secondary")
                                 
                                 if update_submitted:
-                                    if not all([new_name, new_dose]):
+                                    if not all([new_name, new_dose, new_frequency]):
                                         st.error("Please fill in all fields")
                                     else:
                                         try:
@@ -416,7 +430,8 @@ elif page == "Medications":
                                                     "medication_id": selected_med_id,
                                                     "patient_id": selected_med['patient_id'],
                                                     "name": new_name,
-                                                    "dose": new_dose
+                                                    "dose": new_dose,
+                                                    "frequency": new_frequency
                                                 }
                                             )
                                             
@@ -485,22 +500,26 @@ elif page == "Sessions":
             if med_response.status_code == 200:
                 medications = med_response.json().get('medications', [])
                 if medications:
-                    med_cols = st.columns([2, 1, 1])
+                    med_cols = st.columns([2, 1, 1, 1])
                     with med_cols[0]:
                         st.write("**Name**")
                     with med_cols[1]:
                         st.write("**Dose**")
                     with med_cols[2]:
+                        st.write("**Frequency**")
+                    with med_cols[3]:
                         st.write("**ID**")
                     st.divider()
 
                     for med in medications:
-                        med_cols = st.columns([2, 1, 1])
+                        med_cols = st.columns([2, 1, 1, 1])
                         with med_cols[0]:
                             st.write(med['name'])
                         with med_cols[1]:
                             st.write(med['dose'])
                         with med_cols[2]:
+                            st.write(med.get('frequency', 'once'))
+                        with med_cols[3]:
                             st.write(med['medication_id'])
                 else:
                     st.info("No medications assigned")
@@ -538,6 +557,7 @@ elif page == "Sessions":
                                     "Administration ID": record.get('administration_id'),
                                     "Medication ID": record.get('medication_id'),
                                     "Medication Name": record.get('medication_name'),
+                                        "Frequency": record.get('medication_frequency', '-'),
                                     "Confirmed": "✅ Yes" if record.get('patient_confirmed') else "❌ No",
                                     "Nurse Contact": "✅ Yes" if record.get('nurse_contact_required') else "❌ No",
                                     "Educational Prompt": "✅ Yes" if record.get('educational_prompt_delivered') else "❌ No",

@@ -4,12 +4,14 @@ import tempfile
 import shutil
 from datetime import datetime
 from typing import List, Optional, Dict
+from zoneinfo import ZoneInfo
 from data_models import Patient, Medication
 
 DATA_DIR = "data"
 PATIENTS_FILE = os.path.join(DATA_DIR, "patients.json")
 MEDICATIONS_FILE = os.path.join(DATA_DIR, "medications.json")
 SESSIONS_FILE = os.path.join(DATA_DIR, "sessions.json")
+EST_TIMEZONE = ZoneInfo("America/New_York")
 
 # Ensure data directory exists
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -109,8 +111,8 @@ def create_patient(patient: Patient) -> Patient:
     # Auto-generate patient_id if not provided
     if not patient.patient_id:
         patient.patient_id = _get_next_patient_id()
-    patient.created_at = datetime.now().isoformat()
-    patient.updated_at = datetime.now().isoformat()
+    patient.created_at = datetime.now(EST_TIMEZONE).isoformat()
+    patient.updated_at = datetime.now(EST_TIMEZONE).isoformat()
     patients[patient.patient_id] = patient
     save_patients(patients)
     return patient
@@ -120,7 +122,7 @@ def update_patient(patient_id: str, updated_patient: Patient) -> Optional[Patien
     patients = load_patients()
     if patient_id not in patients:
         return None
-    updated_patient.updated_at = datetime.now().isoformat()
+    updated_patient.updated_at = datetime.now(EST_TIMEZONE).isoformat()
     patients[patient_id] = updated_patient
     save_patients(patients)
     return updated_patient
@@ -214,6 +216,7 @@ def update_medication(medication_id: str, updated_medication: Medication) -> Opt
     # Only allow updating name and dose, keep existing patient_id and medication_id
     existing.name = updated_medication.name
     existing.dose = updated_medication.dose
+    existing.frequency = updated_medication.frequency
     medications[medication_id] = existing
     save_medications(medications)
     return existing

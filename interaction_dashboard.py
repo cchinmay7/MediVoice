@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime
 from typing import Dict, List, Optional
+from zoneinfo import ZoneInfo
 
 import requests
 import streamlit as st
@@ -9,6 +10,7 @@ import streamlit as st
 
 API_URL = os.getenv("API_URL", "https://807pdm6rih.execute-api.us-east-1.amazonaws.com")
 SESSIONS_FILE = os.path.join("data", "sessions.json")
+EST_TIMEZONE = ZoneInfo("America/New_York")
 
 
 EDUCATIONAL_PROMPTS = {
@@ -36,7 +38,7 @@ st.caption("Simulates the intervention flow and stores medication-administration
 
 
 def now_iso() -> str:
-    return datetime.now().isoformat()
+    return datetime.now(EST_TIMEZONE).isoformat()
 
 
 def parse_yes_no(value: str) -> Optional[bool]:
@@ -145,7 +147,7 @@ def reset_flow() -> None:
 
 
 def build_session_payload(patient: Dict, medications: List[Dict]) -> Dict:
-    session_id = f"S_{patient['patient_id']}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    session_id = f"S_{patient['patient_id']}_{datetime.now(EST_TIMEZONE).strftime('%Y%m%d%H%M%S')}"
     created_at = now_iso()
 
     return {
@@ -174,6 +176,7 @@ def build_administration_record(
         "patient_id": payload["patient_id"],
         "medication_id": medication.get("medication_id"),
         "medication_name": medication.get("name"),
+        "medication_frequency": medication.get("frequency", "once"),
         "patient_confirmed": bool(final_taken),
         "interaction_flag": True,
         "interaction_completion_flag": not unresolved_input,
@@ -203,6 +206,7 @@ def sanitize_session_payload_for_schema(payload: Dict) -> Dict:
         "patient_id",
         "medication_id",
         "medication_name",
+        "medication_frequency",
         "patient_confirmed",
         "interaction_flag",
         "interaction_completion_flag",
@@ -353,10 +357,11 @@ else:
             st.rerun()
 
         medication = medications[current_index]
+        med_frequency = medication.get("frequency", "once")
         st.header(f"3) Medication Confirmation ({current_index + 1}/{len(medications)})")
         st.write(
             "Alexa: Okay, did you take your "
-            f"**{medication['name']} {medication['dose']}** today? It is for your blood pressure."
+            f"**{medication['name']} {medication['dose']}** today? It is for your blood pressure and you take it **{med_frequency} a day**."
         )
 
         st.caption("Type 1 for Yes, 2 for No, 3 for Unable to register input")
