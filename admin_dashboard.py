@@ -454,137 +454,128 @@ elif page == "Medications":
 
 elif page == "Sessions":
     st.header("Patient Session Viewer")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        patient_id = st.text_input("Patient ID:", key="session_patient_id")
-    with col2:
-        session_date = st.date_input("Select Date:", key="session_date")
-    with col3:
-        view_all_dates = st.checkbox("View all dates", key="view_all_dates")
-    
-    if patient_id:
+    view_all_patients = st.checkbox("View all patients", key="view_all_patients")
+
+    def render_sessions_for_patient(current_patient_id: str, show_patient_header: bool = False):
         try:
-            # Get patient info
-            patient_response = requests.get(f"{API_URL}/patients/{patient_id}")
-            if patient_response.status_code == 200:
-                patient = patient_response.json()
-                
-                # Display patient info at top
+            patient_response = requests.get(f"{API_URL}/patients/{current_patient_id}")
+            if patient_response.status_code != 200:
+                st.error(f"Patient {current_patient_id} not found")
+                return
+
+            patient = patient_response.json()
+
+            if show_patient_header:
+                st.subheader(f"Patient {patient['patient_id']} - {patient['first_name']} {patient['last_name']}")
+            else:
                 st.subheader("Patient Information")
-                col1, col2, col3, col4 = st.columns(4)
-                with col1:
-                    st.metric("Patient ID", patient['patient_id'])
-                with col2:
-                    st.metric("Name", f"{patient['first_name']} {patient['last_name']}")
-                with col3:
-                    st.metric("Pairing Code", patient['pairing_code'])
-                with col4:
-                    st.metric("Status", "🟢 Active" if patient['is_active'] else "🔴 Inactive")
-                
-                # Display medications
-                st.subheader("Medications")
-                med_response = requests.get(f"{API_URL}/patients/{patient_id}/medications")
-                if med_response.status_code == 200:
-                    medications = med_response.json().get('medications', [])
-                    if medications:
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Patient ID", patient['patient_id'])
+            with col2:
+                st.metric("Name", f"{patient['first_name']} {patient['last_name']}")
+            with col3:
+                st.metric("Pairing Code", patient['pairing_code'])
+            with col4:
+                st.metric("Status", "🟢 Active" if patient['is_active'] else "🔴 Inactive")
+
+            st.subheader("Medications")
+            med_response = requests.get(f"{API_URL}/patients/{current_patient_id}/medications")
+            if med_response.status_code == 200:
+                medications = med_response.json().get('medications', [])
+                if medications:
+                    med_cols = st.columns([2, 1, 1])
+                    with med_cols[0]:
+                        st.write("**Name**")
+                    with med_cols[1]:
+                        st.write("**Dose**")
+                    with med_cols[2]:
+                        st.write("**ID**")
+                    st.divider()
+
+                    for med in medications:
                         med_cols = st.columns([2, 1, 1])
                         with med_cols[0]:
-                            st.write("**Name**")
+                            st.write(med['name'])
                         with med_cols[1]:
-                            st.write("**Dose**")
+                            st.write(med['dose'])
                         with med_cols[2]:
-                            st.write("**ID**")
-                        st.divider()
-                        
-                        for med in medications:
-                            med_cols = st.columns([2, 1, 1])
-                            with med_cols[0]:
-                                st.write(med['name'])
-                            with med_cols[1]:
-                                st.write(med['dose'])
-                            with med_cols[2]:
-                                st.write(med['medication_id'])
-                    else:
-                        st.info("No medications assigned")
+                            st.write(med['medication_id'])
                 else:
-                    st.warning("Could not fetch medications")
-                
-                st.divider()
-                
-                # Load and display sessions for the date
-                if view_all_dates:
-                    st.subheader("All Sessions")
-                else:
-                    st.subheader(f"Sessions for {session_date.isoformat()}")
-
-                try:
-                    sessions_response = requests.get(f"{API_URL}/patients/{patient_id}/sessions")
-                    if sessions_response.status_code == 200:
-                        sessions = sessions_response.json().get('sessions', [])
-                        date_str = session_date.isoformat()
-
-                        def session_matches_date(session_obj):
-                            created = session_obj.get('created_at', '')
-                            ended = session_obj.get('ended_at', '')
-                            return created.startswith(date_str) or ended.startswith(date_str)
-
-                        if view_all_dates:
-                            filtered_sessions = sessions
-                        else:
-                            filtered_sessions = [s for s in sessions if session_matches_date(s)]
-
-                        if filtered_sessions:
-                            st.write(f"**Total sessions: {len(filtered_sessions)}**")
-                            st.divider()
-
-                            for session in filtered_sessions:
-                                session_id = session.get('session_id', 'Unknown')
-                                created_at = session.get('created_at', '-')
-                                ended_at = session.get('ended_at', '-')
-                                st.markdown(f"### Session {session_id}")
-                                meta_col1, meta_col2, meta_col3 = st.columns(3)
-                                with meta_col1:
-                                    st.metric("Created", created_at)
-                                with meta_col2:
-                                    st.metric("Ended", ended_at)
-                                with meta_col3:
-                                    admin_count = len(session.get('medication_administration', []))
-                                    st.metric("Medication Entries", admin_count)
-
-                                medication_admin = session.get('medication_administration', [])
-                                if medication_admin:
-                                    table_data = []
-                                    for record in medication_admin:
-                                        table_data.append({
-                                            "Administration ID": record.get('administration_id'),
-                                            "Medication ID": record.get('medication_id'),
-                                            "Medication Name": record.get('medication_name'),
-                                            "Confirmed": "✅ Yes" if record.get('patient_confirmed') else "❌ No",
-                                            "Nurse Contact": "✅ Yes" if record.get('nurse_contact_required') else "❌ No",
-                                            "Educational Prompt": "✅ Yes" if record.get('educational_prompt_delivered') else "❌ No",
-                                            "Error": record.get('error_description', '-') if record.get('error_flag') else "-",
-                                            "Ended At": record.get('ended_at', '-')
-                                        })
-                                    st.dataframe(table_data, use_container_width=True)
-                                else:
-                                    st.info("No medication administration entries in this session")
-
-                                st.divider()
-                        else:
-                            if view_all_dates:
-                                st.info("No sessions found")
-                            else:
-                                st.info(f"No sessions found for {date_str}")
-                    else:
-                        st.warning("Could not fetch sessions")
-                except Exception as e:
-                    st.error(f"Error loading sessions: {str(e)}")
+                    st.info("No medications assigned")
             else:
-                st.error("Patient not found")
+                st.warning("Could not fetch medications")
+
+            st.divider()
+
+            sessions_response = requests.get(f"{API_URL}/patients/{current_patient_id}/sessions")
+            if sessions_response.status_code == 200:
+                sessions = sessions_response.json().get('sessions', [])
+                if sessions:
+                    st.write(f"**Total sessions: {len(sessions)}**")
+                    st.divider()
+
+                    for session in sessions:
+                        session_id = session.get('session_id', 'Unknown')
+                        created_at = session.get('created_at', '-')
+                        ended_at = session.get('ended_at', '-')
+                        st.markdown(f"### Session {session_id}")
+                        meta_col1, meta_col2, meta_col3 = st.columns(3)
+                        with meta_col1:
+                            st.metric("Created", created_at)
+                        with meta_col2:
+                            st.metric("Ended", ended_at)
+                        with meta_col3:
+                            admin_count = len(session.get('medication_administration', []))
+                            st.metric("Medication Entries", admin_count)
+
+                        medication_admin = session.get('medication_administration', [])
+                        if medication_admin:
+                            table_data = []
+                            for record in medication_admin:
+                                table_data.append({
+                                    "Administration ID": record.get('administration_id'),
+                                    "Medication ID": record.get('medication_id'),
+                                    "Medication Name": record.get('medication_name'),
+                                    "Confirmed": "✅ Yes" if record.get('patient_confirmed') else "❌ No",
+                                    "Nurse Contact": "✅ Yes" if record.get('nurse_contact_required') else "❌ No",
+                                    "Educational Prompt": "✅ Yes" if record.get('educational_prompt_delivered') else "❌ No",
+                                    "Error": record.get('error_description', '-') if record.get('error_flag') else "-",
+                                    "Ended At": record.get('ended_at', '-')
+                                })
+                            st.dataframe(table_data, use_container_width=True)
+                        else:
+                            st.info("No medication administration entries in this session")
+
+                        st.divider()
+                else:
+                    st.info("No sessions found")
+            else:
+                st.warning("Could not fetch sessions")
         except Exception as e:
             st.error(f"Connection error: {str(e)}")
+
+    if view_all_patients:
+        try:
+            all_patients_response = requests.get(f"{API_URL}/patients")
+            if all_patients_response.status_code == 200:
+                all_patients = all_patients_response.json().get("patients", [])
+                if all_patients:
+                    for idx, patient in enumerate(all_patients):
+                        render_sessions_for_patient(patient['patient_id'], show_patient_header=True)
+                        if idx < len(all_patients) - 1:
+                            st.markdown("---")
+                else:
+                    st.info("No patients found")
+            else:
+                st.warning("Could not fetch patients")
+        except Exception as e:
+            st.error(f"Error loading patients: {str(e)}")
+    else:
+        patient_id = st.text_input("Patient ID:", key="session_patient_id")
+        if patient_id:
+            render_sessions_for_patient(patient_id)
 
 # Footer
 st.divider()
