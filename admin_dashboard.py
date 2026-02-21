@@ -541,18 +541,21 @@ elif page == "Sessions":
                         ended_at = session.get('ended_at', '-')
                         medication_admin = session.get('medication_administration', [])
                         interaction_completed = session.get('interaction_completed')
-                        if interaction_completed is None and medication_admin:
-                            interaction_completed = all(
-                                record.get('interaction_completion_flag', True)
-                                for record in medication_admin
-                            )
+                        if interaction_completed is None:
+                            if medication_admin:
+                                interaction_completed = all(
+                                    record.get('interaction_completion_flag', True)
+                                    for record in medication_admin
+                                )
+                            elif session.get('ended_at') in (None, '', '-'):
+                                interaction_completed = False
+                            else:
+                                interaction_completed = False
 
-                        if interaction_completed is True:
+                        if interaction_completed:
                             completion_label = '✅ Complete'
-                        elif interaction_completed is False:
-                            completion_label = '⚠️ Incomplete'
                         else:
-                            completion_label = '❔ Unknown'
+                            completion_label = '⚠️ Incomplete'
 
                         st.markdown(f"### Session {session_id}")
                         meta_col1, meta_col2, meta_col3, meta_col4 = st.columns(4)
