@@ -156,6 +156,7 @@ def build_session_payload(patient: Dict, medications: List[Dict]) -> Dict:
         "created_at": created_at,
         "updated_at": created_at,
         "ended_at": None,
+        "interaction_completed": False,
         "medication_administration": [],
         "medication_change_reported": False,
         "medication_change_details": "",
@@ -199,6 +200,7 @@ def sanitize_session_payload_for_schema(payload: Dict) -> Dict:
         "created_at",
         "updated_at",
         "ended_at",
+        "interaction_completed",
         "medication_administration",
     }
     admin_fields = {
@@ -518,6 +520,7 @@ else:
 
         unresolved_any = any(r.get("error_flag") for r in payload["medication_administration"])
         payload["ended_at"] = now_iso()
+        payload["interaction_completed"] = True
 
         col1, col2 = st.columns(2)
         with col1:

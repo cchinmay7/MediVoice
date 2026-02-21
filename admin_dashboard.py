@@ -539,17 +539,33 @@ elif page == "Sessions":
                         session_id = session.get('session_id', 'Unknown')
                         created_at = session.get('created_at', '-')
                         ended_at = session.get('ended_at', '-')
+                        medication_admin = session.get('medication_administration', [])
+                        interaction_completed = session.get('interaction_completed')
+                        if interaction_completed is None and medication_admin:
+                            interaction_completed = all(
+                                record.get('interaction_completion_flag', True)
+                                for record in medication_admin
+                            )
+
+                        if interaction_completed is True:
+                            completion_label = '✅ Complete'
+                        elif interaction_completed is False:
+                            completion_label = '⚠️ Incomplete'
+                        else:
+                            completion_label = '❔ Unknown'
+
                         st.markdown(f"### Session {session_id}")
-                        meta_col1, meta_col2, meta_col3 = st.columns(3)
+                        meta_col1, meta_col2, meta_col3, meta_col4 = st.columns(4)
                         with meta_col1:
                             st.metric("Created", created_at)
                         with meta_col2:
                             st.metric("Ended", ended_at)
                         with meta_col3:
-                            admin_count = len(session.get('medication_administration', []))
+                            admin_count = len(medication_admin)
                             st.metric("Medication Entries", admin_count)
+                        with meta_col4:
+                            st.metric("Interaction", completion_label)
 
-                        medication_admin = session.get('medication_administration', [])
                         if medication_admin:
                             table_data = []
                             for record in medication_admin:

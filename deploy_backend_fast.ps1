@@ -36,8 +36,9 @@ if ($IncludeLocalData -and (Test-Path "data")) {
 Write-Host "Pruning unnecessary package artifacts..."
 Get-ChildItem -Path $buildDir -Recurse -Directory -Filter "__pycache__" | Remove-Item -Recurse -Force
 Get-ChildItem -Path $buildDir -Recurse -File -Include "*.pyc","*.pyo" | Remove-Item -Force
-Get-ChildItem -Path $buildDir -Recurse -Directory -Include "tests","test","docs","examples","bin" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-Get-ChildItem -Path $buildDir -Recurse -Directory -Filter "*.dist-info" | Remove-Item -Recurse -Force
+if (Test-Path (Join-Path $buildDir "bin")) {
+    Remove-Item (Join-Path $buildDir "bin") -Recurse -Force -ErrorAction SilentlyContinue
+}
 
 if (Test-Path $zipPath) {
     Remove-Item $zipPath -Force
