@@ -2,7 +2,12 @@ import streamlit as st
 import requests
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
+
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    ZoneInfo = None
 
 st.set_page_config(page_title="Admin Dashboard - Patient Management", layout="wide")
 
@@ -471,6 +476,27 @@ elif page == "Sessions":
     st.header("Patient Session Viewer")
     view_all_patients = st.checkbox("View all patients", key="view_all_patients")
 
+    dashboard_timezone_name = os.getenv("DASHBOARD_TIMEZONE", "America/New_York")
+
+    def format_session_timestamp(raw_value: str) -> str:
+        if not raw_value or raw_value == "-":
+            return "-"
+
+        try:
+            normalized = str(raw_value).replace("Z", "+00:00")
+            parsed = datetime.fromisoformat(normalized)
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+
+            if ZoneInfo is not None:
+                parsed = parsed.astimezone(ZoneInfo(dashboard_timezone_name))
+            else:
+                parsed = parsed.astimezone()
+
+            return parsed.strftime("%Y-%m-%d %H:%M")
+        except Exception:
+            return str(raw_value)
+
     def render_sessions_for_patient(current_patient_id: str, show_patient_header: bool = False):
         try:
             patient_response = requests.get(f"{API_URL}/patients/{current_patient_id}")
@@ -537,8 +563,8 @@ elif page == "Sessions":
 
                     for session in sessions:
                         session_id = session.get('session_id', 'Unknown')
-                        created_at = session.get('created_at', '-')
-                        ended_at = session.get('ended_at', '-')
+                        created_at = format_session_timestamp(session.get('created_at', '-'))
+                        ended_at = format_session_timestamp(session.get('ended_at', '-'))
                         medication_admin = session.get('medication_administration', [])
                         interaction_completed = session.get('interaction_completed')
                         if interaction_completed is None:
