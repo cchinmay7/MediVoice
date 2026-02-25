@@ -572,8 +572,7 @@ elif page == "Sessions":
                     st.write(f"**Total sessions: {len(sessions)}**")
                     st.divider()
 
-                    for session in sessions:
-                        session_id = session.get('session_id', 'Unknown')
+                    for index, session in enumerate(sessions, start=1):
                         created_at = format_session_timestamp(session.get('created_at', '-'))
                         medication_admin = session.get('medication_administration', [])
                         session_med_change_reported = bool(session.get('medication_change_reported'))
@@ -610,7 +609,7 @@ elif page == "Sessions":
                         else:
                             completion_label = '⚠️ Incomplete'
 
-                        st.markdown(f"### Session {session_id}")
+                        st.markdown(f"### Session {index}")
                         meta_col1, meta_col2, meta_col3 = st.columns(3)
                         with meta_col1:
                             st.metric("Created", created_at)
