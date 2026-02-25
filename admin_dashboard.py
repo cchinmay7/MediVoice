@@ -565,6 +565,23 @@ elif page == "Sessions":
                         session_id = session.get('session_id', 'Unknown')
                         created_at = format_session_timestamp(session.get('created_at', '-'))
                         medication_admin = session.get('medication_administration', [])
+                        session_med_change_reported = bool(session.get('medication_change_reported'))
+                        nurse_follow_up_required = bool(session.get('nurse_follow_up_required'))
+                        follow_up_reason = session.get('follow_up_reason', '')
+
+                        if not nurse_follow_up_required and medication_admin:
+                            nurse_follow_up_required = any(
+                                record.get('nurse_contact_required')
+                                for record in medication_admin
+                            )
+                            if nurse_follow_up_required and not follow_up_reason:
+                                follow_up_reason = 'Participant interaction requires nurse follow-up call.'
+
+                        if not nurse_follow_up_required and session_med_change_reported:
+                            nurse_follow_up_required = True
+                            if not follow_up_reason:
+                                follow_up_reason = 'Participant reported medication changes and needs nurse clarification call.'
+
                         interaction_completed = session.get('interaction_completed')
                         if interaction_completed is None:
                             if medication_admin:
@@ -591,6 +608,12 @@ elif page == "Sessions":
                             st.metric("Medication Entries", admin_count)
                         with meta_col3:
                             st.metric("Interaction", completion_label)
+
+                        if nurse_follow_up_required:
+                            if follow_up_reason:
+                                st.warning(f"📞 Nurse follow-up required: {follow_up_reason}")
+                            else:
+                                st.warning("📞 Nurse follow-up required for this session.")
 
                         if medication_admin:
                             table_data = []
