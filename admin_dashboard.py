@@ -564,7 +564,6 @@ elif page == "Sessions":
                     for session in sessions:
                         session_id = session.get('session_id', 'Unknown')
                         created_at = format_session_timestamp(session.get('created_at', '-'))
-                        ended_at = format_session_timestamp(session.get('ended_at', '-'))
                         medication_admin = session.get('medication_administration', [])
                         interaction_completed = session.get('interaction_completed')
                         if interaction_completed is None:
@@ -584,21 +583,18 @@ elif page == "Sessions":
                             completion_label = '⚠️ Incomplete'
 
                         st.markdown(f"### Session {session_id}")
-                        meta_col1, meta_col2, meta_col3, meta_col4 = st.columns(4)
+                        meta_col1, meta_col2, meta_col3 = st.columns(3)
                         with meta_col1:
                             st.metric("Created", created_at)
                         with meta_col2:
-                            st.metric("Ended", ended_at)
-                        with meta_col3:
                             admin_count = len(medication_admin)
                             st.metric("Medication Entries", admin_count)
-                        with meta_col4:
+                        with meta_col3:
                             st.metric("Interaction", completion_label)
 
                         if medication_admin:
                             table_data = []
                             for record in medication_admin:
-                                record_ended_at = format_session_timestamp(record.get('ended_at', '-'))
                                 table_data.append({
                                     "Administration ID": record.get('administration_id'),
                                     "Medication ID": record.get('medication_id'),
@@ -607,8 +603,7 @@ elif page == "Sessions":
                                     "Confirmed": "✅ Yes" if record.get('patient_confirmed') else "❌ No",
                                     "Nurse Contact": "✅ Yes" if record.get('nurse_contact_required') else "❌ No",
                                     "Educational Prompt": "✅ Yes" if record.get('educational_prompt_delivered') else "❌ No",
-                                    "Error": record.get('error_description', '-') if record.get('error_flag') else "-",
-                                    "Ended At": record_ended_at
+                                    "Error": record.get('error_description', '-') if record.get('error_flag') else "-"
                                 })
                             st.dataframe(table_data, use_container_width=True)
                         else:
