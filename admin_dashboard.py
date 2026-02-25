@@ -598,6 +598,7 @@ elif page == "Sessions":
                         if medication_admin:
                             table_data = []
                             for record in medication_admin:
+                                record_ended_at = format_session_timestamp(record.get('ended_at', '-'))
                                 table_data.append({
                                     "Administration ID": record.get('administration_id'),
                                     "Medication ID": record.get('medication_id'),
@@ -607,7 +608,7 @@ elif page == "Sessions":
                                     "Nurse Contact": "✅ Yes" if record.get('nurse_contact_required') else "❌ No",
                                     "Educational Prompt": "✅ Yes" if record.get('educational_prompt_delivered') else "❌ No",
                                     "Error": record.get('error_description', '-') if record.get('error_flag') else "-",
-                                    "Ended At": record.get('ended_at', '-')
+                                    "Ended At": record_ended_at
                                 })
                             st.dataframe(table_data, use_container_width=True)
                         else:
