@@ -179,7 +179,18 @@ if page == "Patients":
                     
                     # Delete section
                     st.divider()
-                    if st.button("Delete Patient", key="delete_patient_btn", type="secondary"):
+                    st.subheader("Delete Patient")
+                    st.warning("This action permanently deletes the patient and associated records.")
+                    confirm_delete = st.checkbox(
+                        f"I confirm I want to delete patient {patient_id}",
+                        key=f"confirm_delete_{patient_id}"
+                    )
+                    if st.button(
+                        "Confirm Delete Patient",
+                        key="delete_patient_btn",
+                        type="secondary",
+                        disabled=not confirm_delete
+                    ):
                         try:
                             response = requests.delete(f"{API_URL}/patients/{patient_id}")
                             if response.status_code == 200:
