@@ -626,19 +626,28 @@ elif page == "Sessions":
                                 st.warning("📞 Nurse follow-up required for this session.")
 
                         if medication_admin:
-                            table_data = []
+                            administration_table_data = []
+                            session_table_data = []
+
                             for record in medication_admin:
-                                table_data.append({
-                                    "Administration ID": record.get('administration_id'),
-                                    "Medication ID": record.get('medication_id'),
-                                    "Medication Name": record.get('medication_name'),
-                                        "Frequency": record.get('medication_frequency', '-'),
+                                administration_table_data.append({
+                                    "Admin ID": record.get('administration_id'),
+                                    "Med ID": record.get('medication_id'),
+                                    "Name": record.get('medication_name'),
+                                    "Frequency": record.get('medication_frequency', '-'),
                                     "Confirmed": "✅ Yes" if record.get('patient_confirmed') else "❌ No",
+                                })
+
+                                session_table_data.append({
                                     "Nurse Contact": "✅ Yes" if record.get('nurse_contact_required') else "❌ No",
                                     "Educational Prompt": "✅ Yes" if record.get('educational_prompt_delivered') else "❌ No",
-                                    "Error": record.get('error_description', '-') if record.get('error_flag') else "-"
+                                    "Error": record.get('error_description', '-') if record.get('error_flag') else "-",
                                 })
-                            st.dataframe(table_data, use_container_width=True)
+
+                            st.markdown("**Administration**")
+                            st.dataframe(administration_table_data, use_container_width=True)
+                            st.markdown("**Session**")
+                            st.dataframe(session_table_data, use_container_width=True)
                         else:
                             st.info("No medication administration entries in this session")
 
