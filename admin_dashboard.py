@@ -627,7 +627,6 @@ elif page == "Sessions":
 
                         if medication_admin:
                             administration_table_data = []
-                            session_table_data = []
 
                             for record in medication_admin:
                                 administration_table_data.append({
@@ -638,11 +637,27 @@ elif page == "Sessions":
                                     "Confirmed": "✅ Yes" if record.get('patient_confirmed') else "❌ No",
                                 })
 
-                                session_table_data.append({
-                                    "Nurse Contact": "✅ Yes" if record.get('nurse_contact_required') else "❌ No",
-                                    "Educational Prompt": "✅ Yes" if record.get('educational_prompt_delivered') else "❌ No",
-                                    "Error": record.get('error_description', '-') if record.get('error_flag') else "-",
-                                })
+                            has_nurse_contact = any(
+                                record.get('nurse_contact_required')
+                                for record in medication_admin
+                            )
+                            has_educational_prompt = any(
+                                record.get('educational_prompt_delivered')
+                                for record in medication_admin
+                            )
+                            error_messages = [
+                                record.get('error_description', '').strip()
+                                for record in medication_admin
+                                if record.get('error_flag') and record.get('error_description')
+                            ]
+                            unique_error_messages = list(dict.fromkeys(error_messages))
+                            session_error_text = " | ".join(unique_error_messages) if unique_error_messages else "-"
+
+                            session_table_data = [{
+                                "Nurse Contact": "✅ Yes" if has_nurse_contact else "❌ No",
+                                "Educational Prompt": "✅ Yes" if has_educational_prompt else "❌ No",
+                                "Error": session_error_text,
+                            }]
 
                             st.markdown("**Administration**")
                             st.dataframe(administration_table_data, use_container_width=True)
