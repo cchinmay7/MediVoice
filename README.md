@@ -18,6 +18,8 @@ This repository contains:
 - `data_models.py`: Shared data models.
 - `data_storage.py`: Local JSON storage implementation.
 - `data_storage_dynamodb.py`: DynamoDB storage implementation.
+- `admin_dashboard.py`: Streamlit admin dashboard.
+- `interaction_dashboard.py`: Streamlit interaction dashboard.
 - `tests/edge_case_api_tests.py`: API edge-case validation script.
 - `alexa-remote-api-skill/`: Alexa skill project.
 
@@ -36,13 +38,19 @@ pip install fastapi uvicorn pydantic python-multipart boto3 requests mangum
 uvicorn main:app --reload
 ```
 
+4. Run Streamlit dashboards:
+
+```bash
+streamlit run admin_dashboard.py
+streamlit run interaction_dashboard.py --server.port 8503
+```
+
 ## Misc Folder
 
 Operational and non-essential files are organized under `misc/`:
 
 - `misc/docs/`: archived architecture/deployment notes
 - `misc/ops/`: optional deployment scripts and AWS helper files
-- `misc/ui-tools/`: optional dashboard utilities
 
 ## Data and Secrets
 

@@ -40,5 +40,3 @@ misc/*
 !misc/docs/**
 !misc/ops/
 !misc/ops/**
-!misc/ui-tools/
-!misc/ui-tools/**
