@@ -1,7 +1,7 @@
 param(
     [string]$FunctionName = "medication-alexa-skill",
     [string]$Region = "us-east-1",
-    [string]$SkillPath = "2-alexa-remote-api-example-skill/lambda/custom",
+    [string]$SkillPath = "alexa-remote-api-skill/lambda/custom",
     [string]$VerifyPayload = "invoke_payload.json"
 )
 

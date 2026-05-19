@@ -8,7 +8,7 @@ This repository contains:
 
 - A FastAPI backend for patient, medication, and session management.
 - Optional JSON file storage and DynamoDB storage backends.
-- Deployment scripts for backend and Alexa skill Lambda functions.
+- Alexa skill integration project for remote API calls.
 - Basic edge case API testing.
 
 ## Main Components
@@ -19,7 +19,7 @@ This repository contains:
 - `data_storage.py`: Local JSON storage implementation.
 - `data_storage_dynamodb.py`: DynamoDB storage implementation.
 - `tests/edge_case_api_tests.py`: API edge-case validation script.
-- `2-alexa-remote-api-example-skill/`: Alexa skill project.
+- `alexa-remote-api-skill/`: Alexa skill project.
 
 ## Local Development
 
@@ -27,7 +27,7 @@ This repository contains:
 2. Install dependencies:
 
 ```bash
-pip install -r requirements.txt
+pip install fastapi uvicorn pydantic python-multipart boto3 requests mangum
 ```
 
 3. Run locally:
@@ -36,13 +36,13 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-## Deployment
+## Misc Folder
 
-- Backend deploy script: `deploy_backend_fast.ps1`
-- Alexa skill deploy script: `deploy_alexa_fast.ps1`
-- Combined deploy script: `deploy_both_skills.ps1`
+Operational and non-essential files are organized under `misc/`:
 
-See `DEPLOYMENT_RUNBOOK.md` for operational details.
+- `misc/docs/`: archived architecture/deployment notes
+- `misc/ops/`: optional deployment scripts and AWS helper files
+- `misc/ui-tools/`: optional dashboard utilities
 
 ## Data and Secrets
 

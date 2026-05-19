@@ -2,7 +2,6 @@ param(
     [string]$FunctionName = "medication-backend-api",
     [string]$Region = "us-east-1",
     [string]$ApiHealthUrl = "https://807pdm6rih.execute-api.us-east-1.amazonaws.com/",
-    [string]$RequirementsFile = "requirements.lambda.txt",
     [bool]$IncludeLocalData = $false
 )
 
@@ -25,7 +24,25 @@ if (Test-Path $buildDir) {
 New-Item -ItemType Directory -Path $buildDir | Out-Null
 
 Write-Host "Installing Linux-compatible backend dependencies..."
-& $pipExe install --platform manylinux2014_x86_64 --implementation cp --python-version 3.11 --only-binary=:all: -r $RequirementsFile -t $buildDir --upgrade
+$requirementsFile = Join-Path $root "requirements.lambda.txt"
+if (-not (Test-Path $requirementsFile)) {
+    $requirementsFile = Join-Path $root "requirements.txt"
+}
+
+if (Test-Path $requirementsFile) {
+    Write-Host "Using dependency file: $requirementsFile"
+    & $pipExe install --platform manylinux2014_x86_64 --implementation cp --python-version 3.11 --only-binary=:all: -r $requirementsFile -t $buildDir --upgrade
+} else {
+    $backendPackages = @(
+        "fastapi==0.115.8",
+        "pydantic==2.10.6",
+        "python-multipart==0.0.20",
+        "boto3==1.36.26",
+        "requests==2.32.3",
+        "mangum==0.21.0"
+    )
+    & $pipExe install --platform manylinux2014_x86_64 --implementation cp --python-version 3.11 --only-binary=:all: -t $buildDir --upgrade @backendPackages
+}
 
 Write-Host "Copying backend source files..."
 Copy-Item "main.py","handler.py","data_models.py","data_storage.py","data_storage_dynamodb.py" $buildDir -Force

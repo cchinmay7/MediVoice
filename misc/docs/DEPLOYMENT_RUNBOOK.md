@@ -5,7 +5,7 @@ This guide takes you from local code to a testable Alexa skill in AWS.
 ## What you have already
 - FastAPI backend: `main.py`, `data_models.py`, `data_storage.py`
 - DynamoDB storage module: `data_storage_dynamodb.py`
-- Alexa skill project: `2-alexa-remote-api-example-skill`
+- Alexa skill project: `alexa-remote-api-skill`
 
 ## Goal
 1. Deploy backend API
@@ -170,12 +170,12 @@ Then redeploy the backend Lambda zip if needed and retest `/patients`.
 
 ## 4) Deploy Alexa Skill Lambda (Node)
 
-This is the Lambda for `2-alexa-remote-api-example-skill/lambda/custom/index.js`.
+This is the Lambda for `alexa-remote-api-skill/lambda/custom/index.js`.
 
 ### 4.1 Build skill Lambda package
 
 ```powershell
-cd "E:\Projects\Alexa Skill\2-alexa-remote-api-example-skill\lambda\custom"
+cd "E:\Projects\Alexa Skill\alexa-remote-api-skill\lambda\custom"
 npm install
 
 Remove-Item .\skill_lambda.zip -ErrorAction SilentlyContinue
@@ -202,8 +202,8 @@ Example:
 
 ### 5.1 Import or create skill
 Use files from:
-- `2-alexa-remote-api-example-skill/skill.json`
-- `2-alexa-remote-api-example-skill/models/en-US.json`
+- `alexa-remote-api-skill/skill.json`
+- `alexa-remote-api-skill/models/en-US.json`
 
 ### 5.2 Set endpoint
 In Alexa Console → Build → Endpoint:

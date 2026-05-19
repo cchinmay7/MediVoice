@@ -19,6 +19,9 @@ node_modules/
 out.json
 out_patients.json
 data/sessions.json
+requirements.txt
+requirements.lambda.txt
+runtime.txt
 
 # Workspace/editor/OS
 .vscode/
@@ -31,5 +34,11 @@ Thumbs.db
 # Local deploy helpers
 deploy_both_skills.ps1
 
-# Archived non-essential artifacts
-misc/
+# Misc organization
+misc/*
+!misc/docs/
+!misc/docs/**
+!misc/ops/
+!misc/ops/**
+!misc/ui-tools/
+!misc/ui-tools/**
