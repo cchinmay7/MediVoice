@@ -1,30 +1,35 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyo
 .venv/
 venv/
 .env
+.pytest_cache/
+.mypy_cache/
 
 # Node
 node_modules/
 
 # Build/package artifacts
-lambda_backend_package/
 *.zip
 .deploy_tmp/
 
-# OS/editor
-.DS_Store
-Thumbs.db
-.vscode/
-
-# Runtime/local data
+# Local runtime data
 out.json
 out_patients.json
 data/sessions.json
 
-# Streamlit local secrets
+# Workspace/editor/OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local app secrets
 .streamlit/secrets.toml
 
 # Local deploy helpers
 deploy_both_skills.ps1
+
+# Archived non-essential artifacts
+misc/
